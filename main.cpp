@@ -1,3 +1,4 @@
+#include "perlin2D.hpp"
 #include <glm/ext/quaternion_geometric.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <iostream>
@@ -5,6 +6,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 // #include "stb_image.h"
 #include "Mesh.hpp"
+#include "perlin.hpp"
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -12,7 +14,6 @@ void processInput(GLFWwindow *window);
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
-
 
 // Initialisation function
 int init() {
@@ -31,92 +32,111 @@ int init() {
   return 0;
 }
 
-std::vector<GLuint> gen_indices(int div)
-{
-    std::vector<GLuint> indices;
-    indices.reserve(div * div * 6);
+std::vector<GLuint> gen_indices(int div) {
+  std::vector<GLuint> indices;
+  indices.reserve(div * div * 6);
 
-    for(int col = 0; col < div-1; col++)
+  for (int col = 0; col < div - 1; col++) {
+    for (int row = 0; row < div - 1; row++) {
+      int index = row + div * col;
+
+      // top triangle
+      indices.push_back(index);
+      indices.push_back(index + div + 1);
+      indices.push_back(index + div);
+
+      // bottom triangle
+      indices.push_back(index);
+      indices.push_back(index + 1);
+      indices.push_back(index + div + 1);
+    }
+  }
+  return indices;
+}
+Perlin2D noise;
+
+float FBM(float x, float y, float scale, float persistence, float lacrunarity, int octaves)
+{
+    const float xs = x / scale;
+    const float ys = y / scale;
+    float amp = 1.0f, freq = 1.0f, total = 0.0f, normalisation = 0.0f;
+
+    for(int i = 0; i < octaves; i++)
     {
-        for(int row = 0; row < div-1; row++)
-        {
-            int index = row + div * col;
-
-            // top triangle
-            indices.push_back(index);
-            indices.push_back(index + div + 1);
-            indices.push_back(index + div);
-
-            // bottom triangle
-            indices.push_back(index);
-            indices.push_back(index + 1);
-            indices.push_back(index + div + 1);
-        }
+        float noiseVal = noise.perlin(xs * freq, ys * freq);
+        total += noiseVal * amp;
+        normalisation += amp;
+        amp *= persistence;
+        freq *= lacrunarity;
     }
-    return indices;
+
+    total /= normalisation;
+
+    return total;
 }
 
-std::vector<glm::vec3> gen_coords(int dVertices, float width)
-{
-    std::vector<glm::vec3> coords;
-    coords.reserve(dVertices*dVertices);
-    // coords normals colours
-    // gen coords, 
-    // gen Normals, 
-    // gen colours
+std::vector<glm::vec3> gen_coords(int dVertices, float width) {
+  //std::vector<float> noiseMap = noise.generate_noise_map();
+  //std::cout << noiseMap.size() << std::endl;
+  std::vector<glm::vec3> coords;
+  coords.reserve(dVertices * dVertices);
+  // coords normals colours
+  // gen coords,
+  // gen Normals,
+  // gen colours
 
-    float triangle_length = width / dVertices;
-    for(int col = 0; col < dVertices; col++){
-        for(int row = 0; row < dVertices; row++){
-            coords.push_back(glm::vec3((row*triangle_length), 0.0, (col*triangle_length)));
-        }
+  float triangle_length = width / dVertices;
+  for (int col = 0; col < dVertices; col++) {
+    for (int row = 0; row < dVertices; row++) {
+      //float noise = noiseMap[row + col * dVertices];
+      //std::cout << noise << std::endl;
+      float x = row * triangle_length;
+      float z = col * triangle_length;
+      float y = FBM(x, z, 5, 0.5, 2, 4);
+      coords.push_back(glm::vec3(x, y, z));
     }
-    return coords;
+  }
+  return coords;
 }
 
-
-std::vector<glm::vec3> gen_normals(std::vector<glm::vec3> coords, std::vector<GLuint> indices)
-{
-    std::vector<glm::vec3> normals; 
-    //normal.reserve()
-    for(int i = 0; i < indices.size(); i+=3)
-    {
-        glm::vec3 U = coords[i+1] - coords[i];
-        glm::vec3 V = coords[i+2] - coords[i];
-        glm::vec3 normal = glm::normalize(glm::cross(U,V));
-        normals.push_back(normal);
-    }
-    return normals;
+std::vector<glm::vec3> gen_normals(std::vector<glm::vec3> coords,
+                                   std::vector<GLuint> indices) {
+  std::vector<glm::vec3> normals;
+  // normal.reserve()
+  for (int i = 0; i < indices.size(); i += 3) {
+    glm::vec3 U = coords[i + 1] - coords[i];
+    glm::vec3 V = coords[i + 2] - coords[i];
+    glm::vec3 normal = glm::normalize(glm::cross(U, V));
+    normals.push_back(normal);
+  }
+  return normals;
 }
 
-//std::vector<glm::vec3> gen_colors()
+// std::vector<glm::vec3> gen_colors()
 //{
 
 //}
 
 std::vector<Vertex> gen_vertex()
-//void gen_vertex()
+// void gen_vertex()
 {
-    std::vector<Vertex> Vertices;
-    std::vector<GLuint> indices = gen_indices(50);
-    std::vector<glm::vec3> coords = gen_coords(50, 10.0f);
-//    std::vector<glm::vec3> normals = gen_normals(coords, indices);
-    for(int i = 0; i < coords.size(); i++)
-    {
-        Vertices.push_back(Vertex{coords[i], glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.7f, 0.1f)});
-    }
-    return Vertices;
+  std::vector<Vertex> Vertices;
+  std::vector<GLuint> indices = gen_indices(100);
+  std::vector<glm::vec3> coords = gen_coords(100, 50.0f);
+  //    std::vector<glm::vec3> normals = gen_normals(coords, indices);
+  for (int i = 0; i < coords.size(); i++) {
+    Vertices.push_back(
+        Vertex{coords[i], glm::vec3(0.0f, 1.0f, 0.0f),
+               glm::vec3(coords[i].y, coords[i].y, coords[i].y)});
+  }
+  return Vertices;
 }
-
-
-
-
 
 int main() {
 
-  //if (init() != 0) {
-    //std::cerr << "INIT FAILED" << std::endl;
-    //return -1;
+  // if (init() != 0) {
+  // std::cerr << "INIT FAILED" << std::endl;
+  // return -1;
   //}
   glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -131,14 +151,13 @@ int main() {
   GLFWwindow *window =
       glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
 
-  if (window == NULL) { 
+  if (window == NULL) {
     std::cout << "Failed to create GLFW window" << std::endl;
     glfwTerminate();
     return -1;
   }
   glfwMakeContextCurrent(window);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
     std::cout << "Failed to initialize GLAD" << std::endl;
@@ -152,17 +171,16 @@ int main() {
   // set up vertex data (and buffer(s)) and configure vertex attributes
   // ------------------------------------------------------------------
 
-
-  // Gernerate Vertices 
+  // Gernerate Vertices
   // Generate Indices
   // TexCoords
   // Generate Normals
   //
   //
-  //Vertex structure (coords, normals, color);
+  // Vertex structure (coords, normals, color);
   //
   std::vector<Vertex> Vertices = gen_vertex();
-  std::vector<GLuint> Indices = gen_indices(50);
+  std::vector<GLuint> Indices = gen_indices(100);
 
   Vertex lightVertices[] = {//     COORDINATES     //
                             Vertex{glm::vec3(-0.1f, -0.1f, 0.1f)},

@@ -13,17 +13,16 @@ class Perlin {
 
 public:
   Perlin();
-  std::vector<float> generate_noise_map(int X_offset, int Y_offset);
+  std::vector<float> generate_noise_map();
 
   // Noise Parameters
-  const int octaves = 5;
+  const int octaves = 1;
   float persistance = 0.5;
   float lacunarity = 2.0;
 
   // temp Parameters (will be changed)
-  int xMapChunks = 10, yMapChunks = 10;
-  int chunkHeight = 127, chunkWidth = 127;
-  int noiseScale = 64;
+  int chunkHeight = 100, chunkWidth = 100;
+  int noiseScale = 128;
 
 private:
   double Perlin_Noise(float x, float y);

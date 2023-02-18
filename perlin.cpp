@@ -2,14 +2,8 @@
 
 Perlin::Perlin() {}
 
-std::vector<float> Perlin::generate_noise_map(int X_offset, int Y_offset) {
-  // Chunk height
-  // chunk width
-  // octaves
-  // noise scale
-  // mesh height
-
-  // std::vector<float> noiseValues;
+std::vector<float> Perlin::generate_noise_map() {
+    
   std::vector<float> NormalisedNoiseValues((chunkHeight * chunkWidth), 1.0);
 
   float amp = 1.0, freq = 1.0, maxHeight = 0.0;
@@ -25,9 +19,9 @@ std::vector<float> Perlin::generate_noise_map(int X_offset, int Y_offset) {
         freq = 1;
       for (int i = 0; i < octaves; i++) {
         float xSample =
-            (float)(x + X_offset * (chunkWidth - 1)) / noiseScale * freq;
+            (float)(x * (chunkWidth - 1)) / noiseScale * freq;
         float ySample =
-            (float)(y + Y_offset * (chunkHeight - 1)) / noiseScale * freq;
+            (float)(y * (chunkHeight - 1)) / noiseScale * freq;
 
         float perlinValue = Perlin_Noise(xSample, ySample);
         NormalisedNoiseValues[x + (y * chunkWidth)] += perlinValue * amp;
@@ -61,16 +55,6 @@ double Perlin::Perlin_Noise(float x, float y) {
   double v = _fade(yf);
   double w = _fade(zf);
 
-  // int aaa, aba, aab, abb, baa, bba, bab, bbb;
-  // aaa = p[p[p[xi]   + yi]   + zi];
-  // aba = p[p[p[xi]   + yi++] + zi];
-  // aab = p[p[p[xi]   + yi]   + zi++];
-  // abb = p[p[p[xi]   + yi++] + zi++];
-  // baa = p[p[p[xi++] + yi]   + zi];
-  // bba = p[p[p[xi++] + yi++] + zi];
-  // bab = p[p[p[xi++] + yi]   + zi++];
-  // bbb = p[p[p[xi++] + yi++] + zi++];o
-
   int A, AA, AB, B, BA, BB;
   A = p[xi] + yi;
   AA = p[A] + zi;
@@ -91,19 +75,6 @@ double Perlin::Perlin_Noise(float x, float y) {
   y2 = _lerp(x1, x2, v);
 
   double noise = _lerp(y1, y2, w);
-
-  // double noise =
-  //_lerp(v,
-  //_lerp(v,
-  //_lerp(u, _grad(p[AA], xf, yf, zf),        // AND ADD
-  //_grad(p[BA], xf - 1, yf, zf)),      // BLENDED
-  //_lerp(u, _grad(p[AB], xf, yf - 1, zf),    // RESULTS
-  //_grad(p[BB], xf - 1, yf - 1, zf))), // FROM  8
-  //_lerp(v,
-  //_lerp(u, _grad(p[AA + 1], xf, yf, zf - 1),   // CORNERS
-  //_grad(p[BA + 1], xf - 1, yf, zf - 1)), // OF CUBE
-  //_lerp(u, _grad(p[AB + 1], xf, yf - 1, zf - 1),
-  //_grad(p[BB + 1], xf - 1, yf - 1, zf - 1))));
 
   return noise;
 }
