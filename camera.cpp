@@ -105,5 +105,15 @@ void Camera::Inputs(GLFWwindow* window)
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         firstClick = true;
     }
+
+
+    if(glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
+    {
+        glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    }
+    if(glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
+    {
+        glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+    }
 }
 

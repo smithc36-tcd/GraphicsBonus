@@ -6,19 +6,17 @@
 #include "VAO.hpp"
 #include "EBO.hpp"
 #include "camera.hpp"
-#include "Texture.hpp"
+//#include "Texture.hpp "
 
 class Mesh
 {
     public:
         std::vector<Vertex> vertices;
         std::vector<GLuint> indices;
-        std::vector<Texture> textures;
 
         VAO VAOi;
 
-        Mesh(std::vector<Vertex> &vertices, std::vector<GLuint> &indices, 
-                std::vector<Texture> &textures);
+        Mesh(std::vector<Vertex> &vertices, std::vector<GLuint> &indices);
 
         void Draw(Shader& shader, Camera& camera);
 

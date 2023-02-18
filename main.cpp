@@ -1,4 +1,7 @@
+#include <glm/ext/quaternion_geometric.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <iostream>
+#include <system_error>
 #define STB_IMAGE_IMPLEMENTATION
 // #include "stb_image.h"
 #include "Mesh.hpp"
@@ -14,6 +17,7 @@ const unsigned int SCR_HEIGHT = 600;
 // Initialisation function
 int init() {
   glfwInit();
+
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -27,12 +31,100 @@ int init() {
   return 0;
 }
 
+std::vector<GLuint> gen_indices(int div)
+{
+    std::vector<GLuint> indices;
+    indices.reserve(div * div * 6);
+
+    for(int col = 0; col < div-1; col++)
+    {
+        for(int row = 0; row < div-1; row++)
+        {
+            int index = row + div * col;
+
+            // top triangle
+            indices.push_back(index);
+            indices.push_back(index + div + 1);
+            indices.push_back(index + div);
+
+            // bottom triangle
+            indices.push_back(index);
+            indices.push_back(index + 1);
+            indices.push_back(index + div + 1);
+        }
+    }
+    return indices;
+}
+
+std::vector<glm::vec3> gen_coords(int dVertices, float width)
+{
+    std::vector<glm::vec3> coords;
+    coords.reserve(dVertices*dVertices);
+    // coords normals colours
+    // gen coords, 
+    // gen Normals, 
+    // gen colours
+
+    float triangle_length = width / dVertices;
+    for(int col = 0; col < dVertices; col++){
+        for(int row = 0; row < dVertices; row++){
+            coords.push_back(glm::vec3((row*triangle_length), 0.0, (col*triangle_length)));
+        }
+    }
+    return coords;
+}
+
+
+std::vector<glm::vec3> gen_normals(std::vector<glm::vec3> coords, std::vector<GLuint> indices)
+{
+    std::vector<glm::vec3> normals; 
+    //normal.reserve()
+    for(int i = 0; i < indices.size(); i+=3)
+    {
+        glm::vec3 U = coords[i+1] - coords[i];
+        glm::vec3 V = coords[i+2] - coords[i];
+        glm::vec3 normal = glm::normalize(glm::cross(U,V));
+        normals.push_back(normal);
+    }
+    return normals;
+}
+
+//std::vector<glm::vec3> gen_colors()
+//{
+
+//}
+
+std::vector<Vertex> gen_vertex()
+//void gen_vertex()
+{
+    std::vector<Vertex> Vertices;
+    std::vector<GLuint> indices = gen_indices(50);
+    std::vector<glm::vec3> coords = gen_coords(50, 10.0f);
+//    std::vector<glm::vec3> normals = gen_normals(coords, indices);
+    for(int i = 0; i < coords.size(); i++)
+    {
+        Vertices.push_back(Vertex{coords[i], glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.7f, 0.1f)});
+    }
+    return Vertices;
+}
+
+
+
+
+
 int main() {
 
-  if (init() != 0) {
-    std::cerr << "INIT FAILED" << std::endl;
-    return -1;
-  }
+  //if (init() != 0) {
+    //std::cerr << "INIT FAILED" << std::endl;
+    //return -1;
+  //}
+  glfwInit();
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+  // glad: load all OpenGL function pointers
+  // ---------------------------------------
 
   // glfw window creation
   // --------------------
@@ -48,35 +140,29 @@ int main() {
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
 
-
+  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+    std::cout << "Failed to initialize GLAD" << std::endl;
+    return -1;
+  }
 
   // build and compile our shader zprogram
   // ------------------------------------
   Shader ourShader("Shaders/shader.vs", "Shaders/shader.fs");
 
-  Texture textures[] = {
-      Texture("Textures/planks.png", "diffuse", 0, GL_RGBA, GL_UNSIGNED_BYTE),
-      Texture("Textures/planksSpec.png", "specular", 1, GL_RED,
-              GL_UNSIGNED_BYTE)};
-
   // set up vertex data (and buffer(s)) and configure vertex attributes
   // ------------------------------------------------------------------
 
-  // Vertices coordinates
-  Vertex vertices[] = {
-      //               COORDINATES           /            COLORS          /
-      //               TexCoord         /       NORMALS         //
-      Vertex{glm::vec3(-1.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f),
-             glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f)},
-      Vertex{glm::vec3(-1.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f),
-             glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 1.0f)},
-      Vertex{glm::vec3(1.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f),
-             glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f)},
-      Vertex{glm::vec3(1.0f, 0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f),
-             glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 0.0f)}};
 
-  // Indices for vertices order
-  GLuint indices[] = {0, 1, 2, 0, 2, 3};
+  // Gernerate Vertices 
+  // Generate Indices
+  // TexCoords
+  // Generate Normals
+  //
+  //
+  //Vertex structure (coords, normals, color);
+  //
+  std::vector<Vertex> Vertices = gen_vertex();
+  std::vector<GLuint> Indices = gen_indices(50);
 
   Vertex lightVertices[] = {//     COORDINATES     //
                             Vertex{glm::vec3(-0.1f, -0.1f, 0.1f)},
@@ -92,12 +178,7 @@ int main() {
                            3, 7, 6, 3, 6, 2, 2, 6, 5, 2, 5, 1,
                            1, 5, 4, 1, 4, 0, 4, 5, 6, 4, 6, 7};
 
-  std::vector<Vertex> verts(vertices,
-                            vertices + sizeof(vertices) / sizeof(Vertex));
-  std::vector<GLuint> ind(indices, indices + sizeof(indices) / sizeof(GLuint));
-  std::vector<Texture> tex(textures,
-                           textures + sizeof(textures) / sizeof(Texture));
-  Mesh floor(verts, ind, tex);
+  Mesh floor(Vertices, Indices);
 
   // Lighting
 
@@ -106,7 +187,7 @@ int main() {
       lightVertices, lightVertices + sizeof(lightVertices) / sizeof(Vertex));
   std::vector<GLuint> lightInd(
       lightIndices, lightIndices + sizeof(lightIndices) / sizeof(GLuint));
-  Mesh light(lightVerts, lightInd, tex);
+  Mesh light(lightVerts, lightInd);
 
   glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -133,16 +214,10 @@ int main() {
 
   // load and create a texture
   // -------------------------
-  // Texture tex("Textures/planks.png", GL_TEXTURE_2D, 0, GL_RGBA,
-  // GL_UNSIGNED_BYTE);
-  // tex.texUnit(ourShader, "tex0", 0);
-  // Texture planksSpec("Textures/planksSpec.png", GL_TEXTURE_2D, 1, GL_RED,
-  // GL_UNSIGNED_BYTE);
-  // tex.texUnit(ourShader, "tex1", 1);
 
   glEnable(GL_DEPTH_TEST);
 
-  Camera camera(SCR_WIDTH, SCR_HEIGHT, glm::vec3(0.0f, 0.0f, 2.0f));
+  Camera camera(SCR_WIDTH, SCR_HEIGHT, glm::vec3(0.0f, 1.0f, 2.0f));
 
   // render loop
   // -----------
