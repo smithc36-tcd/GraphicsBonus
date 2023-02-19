@@ -8,6 +8,10 @@
 #include "Mesh.hpp"
 #include "perlin.hpp"
 
+#include "imGUI/imgui.h"
+#include "imGUI/imgui_impl_glfw.h"
+#include "imGUI/imgui_impl_opengl3.h"
+
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
 
@@ -92,8 +96,8 @@ std::vector<glm::vec3> gen_coords(int dVertices, float width) {
       //std::cout << noise << std::endl;
       float x = row * triangle_length;
       float z = col * triangle_length;
-      float y = FBM(x, z, 5, 0.5, 2, 4);
-      coords.push_back(glm::vec3(x, y, z));
+      //float y = FBM(x, z, 5, 0.5, 2, 4);
+      coords.push_back(glm::vec3(x, 0.0, z));
     }
   }
   return coords;
@@ -121,8 +125,8 @@ std::vector<Vertex> gen_vertex()
 // void gen_vertex()
 {
   std::vector<Vertex> Vertices;
-  std::vector<GLuint> indices = gen_indices(100);
-  std::vector<glm::vec3> coords = gen_coords(100, 50.0f);
+  std::vector<GLuint> indices = gen_indices(200);
+  std::vector<glm::vec3> coords = gen_coords(200, 30.0f);
   //    std::vector<glm::vec3> normals = gen_normals(coords, indices);
   for (int i = 0; i < coords.size(); i++) {
     Vertices.push_back(
@@ -164,9 +168,18 @@ int main() {
     return -1;
   }
 
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGuiIO &io = ImGui::GetIO();
+  (void)io;
+  ImGui::StyleColorsDark();
+  ImGui_ImplGlfw_InitForOpenGL(window, true);
+  ImGui_ImplOpenGL3_Init("#version 330");
+
+
   // build and compile our shader zprogram
   // ------------------------------------
-  Shader ourShader("Shaders/shader.vs", "Shaders/shader.fs");
+  Shader ourShader("Shaders/perlin.vs", "Shaders/shader.fs");
 
   // set up vertex data (and buffer(s)) and configure vertex attributes
   // ------------------------------------------------------------------
@@ -180,7 +193,7 @@ int main() {
   // Vertex structure (coords, normals, color);
   //
   std::vector<Vertex> Vertices = gen_vertex();
-  std::vector<GLuint> Indices = gen_indices(100);
+  std::vector<GLuint> Indices = gen_indices(200);
 
   Vertex lightVertices[] = {//     COORDINATES     //
                             Vertex{glm::vec3(-0.1f, -0.1f, 0.1f)},
@@ -229,6 +242,26 @@ int main() {
               lightColor.y, lightColor.z, lightColor.w);
   glUniform3f(glGetUniformLocation(ourShader.ID, "lightPos"), lightColor.x,
               lightColor.y, lightColor.z);
+  //glUniform1f(glGetUniformLocation(ourShader.ID, "persistence"))
+  //
+  //
+  
+
+ float persistence = 0.5f;
+ float lacrunarity = 2.0f;
+ int scale = 2; 
+ float yOffset = 0.0f;
+ int height = 1;
+
+
+
+
+ //V     uniform float persistence; 
+//unitform float lacunarity;
+//uniform int scale; 
+//Vuniform int octaves; 
+
+
 
   // load and create a texture
   // -------------------------
@@ -237,12 +270,19 @@ int main() {
 
   Camera camera(SCR_WIDTH, SCR_HEIGHT, glm::vec3(0.0f, 1.0f, 2.0f));
 
+
+
   // render loop
   // -----------
   while (!glfwWindowShouldClose(window)) {
     // input
     // -----
     processInput(window);
+
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
 
     // render
     // ------
@@ -258,6 +298,27 @@ int main() {
     // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved
     // etc.)
     // -------------------------------------------------------------------------------
+    
+  ImGui::Begin("ImGui Window");
+  ImGui::Text("Hello, World");
+  ImGui::SliderFloat("Persistence", &persistence, 0.1f, 1.0f);
+  ImGui::SliderFloat("Lacrunarity", &lacrunarity, 0.5f, 5.0f);
+  ImGui::SliderInt("Scale", &scale, 1, 10);
+  ImGui::SliderFloat("yOffset", &yOffset, -2.0f, 2.0f);
+  ImGui::SliderInt("height", &height, 1, 50);
+  ImGui::End();
+    
+  ourShader.use();
+  ourShader.setFloat("persistence", persistence);
+  ourShader.setFloat("lacunarity", lacrunarity);
+  ourShader.setInt("scale", scale);
+  ourShader.setFloat("yOffset", yOffset);
+  ourShader.setInt("height", height);
+
+  ImGui::Render();
+  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
@@ -269,6 +330,9 @@ int main() {
   // glDeleteVertexArrays(1, &VAO);
   // glDeleteBuffers(1, &VBO);
   // glDeleteBuffers(1, &EBO);
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
 
   // glfw: terminate, clearing all previously allocated GLFW resources.
   // ------------------------------------------------------------------

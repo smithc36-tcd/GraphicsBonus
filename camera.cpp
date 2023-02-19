@@ -63,7 +63,7 @@ void Camera::Inputs(GLFWwindow* window)
         speed = 0.05f;
     }
 
-    if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+    if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
     {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
@@ -99,7 +99,7 @@ void Camera::Inputs(GLFWwindow* window)
          
  
     }
-    else if(glfwGetMouseButton(window,GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
+    else if(glfwGetMouseButton(window,GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE)
     {
         //  on release of mouse 
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);

@@ -15,6 +15,7 @@ void main()
 {
     // Current position used to calcuate the direction of light 
     currPos = vec3(model * vec4(aPos, 1.0f));
+    currPos.y = 10*sin(currPos.x);
     Normal = aNormal;
     Color = vec4(aColor, 1.0);
 
