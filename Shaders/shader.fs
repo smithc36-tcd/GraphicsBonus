@@ -8,6 +8,7 @@ in vec4 Color;
 uniform vec4 lightColor;
 uniform vec3 lightPos;
 uniform vec3 camPos;
+//uniform float height;
 
 
 vec4 PointLight()
@@ -86,10 +87,28 @@ vec4 SpotLight()
          specular * inten * lightColor;
 }
 
+vec4 ColorHeight(float y)
+{
+    if(y < 0.1) // water
+    { 
+        return vec4(0.1, 0.1, 1.0, 1.0);
+    }
+    else if(y < 0.2) // sand
+    { 
+        return vec4(0.1, 0.7, 0.7, 1.0);
+    }
+    else if(y < 0.5) // grass
+    { 
+        return vec4(0.2, 1.0, 0.3, 1.0);
+    }
+    else
+        return vec4(0.7, 0.7, 0.7, 1.0);
+}
+
 void main()
 {
     //FragColor = PointLight();
-    //FragColor = DirectionalLight() + ourColor;
+    //FragColor = DirectionalLight() + Color;
     //FragColor = SpotLight();
 
     FragColor = Color;

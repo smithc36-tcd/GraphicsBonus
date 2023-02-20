@@ -17,6 +17,8 @@ uniform float lacunarity;
 uniform int scale; 
 uniform int octaves; 
 uniform float yOffset;
+uniform float xOffset;
+uniform float zOffset;
 uniform int height; 
 
 float _lerp(float a0, float a1, float t)
@@ -44,22 +46,19 @@ float Perlin(float x, float y)
     float i1 = _lerp(v1, v2, fractional_x);
     float i2 = _lerp(v3, v4, fractional_x);
 
-    return _lerp(i1, i2, fractional_y) * 0.5 + 0.5;
+    return _lerp(i1, i2, fractional_y) * 0.5;
 }
 
 float FBM(float x, float z)
 {
-    float scalef = float(scale);
-
-    float xs = x / scale; 
-    float zs = z /  scale; 
+    float scalef = float(scale); float xs = x / scale; float zs = z /  scale; 
     
     float amp = 1.0;
     float freq = 1.0;
     float total = 0.0; 
     float normalisation = 0.0;
 
-    const int octaves = 3;
+    const int octaves = 6;
     for(int i = 0; i < octaves; i++)
     {
         float noiseVal = Perlin(xs * freq, zs * freq);
@@ -73,14 +72,38 @@ float FBM(float x, float z)
     return total;
 }
 
+vec4 ColorHeight(float y)
+{
+    if(y < 0.2) // water
+    { 
+        return vec4(0.1, 0.1, 1.0, 1.0);
+    }
+    else if(y < 0.3) // shallow water
+    { 
+        return vec4(0.1, 0.7, 0.7, 1.0);
+    }
+    else if(y < .35){
+        return vec4(0.76, 0.69, 0.5, 1.0);
+    }
+    else if(y < 0.5) // grass
+    { 
+        return vec4(0.2, 1.0, 0.3, 1.0);
+    }
+    else if (y < 0.85)
+        return vec4(0.7, 0.7, 0.7, 1.0);
+    else 
+        return vec4(1.0, 1.0, 1.0, 1.0);
+}
+
 void main()
 {
     // Current position used to calcuate the direction of light 
     currPos = vec3(model * vec4(aPos, 1.0f));
-    currPos.y = height * FBM(currPos.x, currPos.z) + yOffset;
+    float noise = FBM((currPos.x + xOffset)* 0.2, (currPos.z + zOffset) * 0.2);
+    currPos.y = currPos.y + noise * height +  yOffset;
     //currPos.y = Perlin(currPos.x, currPos.z);
     Normal = aNormal;
-    Color = vec4(aColor, 1.0);
+    Color = ColorHeight(2* noise);
 
     gl_Position = camMatrix * vec4(currPos, 1.0f);
 }

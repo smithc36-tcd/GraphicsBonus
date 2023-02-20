@@ -125,8 +125,8 @@ std::vector<Vertex> gen_vertex()
 // void gen_vertex()
 {
   std::vector<Vertex> Vertices;
-  std::vector<GLuint> indices = gen_indices(200);
-  std::vector<glm::vec3> coords = gen_coords(200, 30.0f);
+  std::vector<GLuint> indices = gen_indices(500);
+  std::vector<glm::vec3> coords = gen_coords(500, 50.0f);
   //    std::vector<glm::vec3> normals = gen_normals(coords, indices);
   for (int i = 0; i < coords.size(); i++) {
     Vertices.push_back(
@@ -193,7 +193,7 @@ int main() {
   // Vertex structure (coords, normals, color);
   //
   std::vector<Vertex> Vertices = gen_vertex();
-  std::vector<GLuint> Indices = gen_indices(200);
+  std::vector<GLuint> Indices = gen_indices(500);
 
   Vertex lightVertices[] = {//     COORDINATES     //
                             Vertex{glm::vec3(-0.1f, -0.1f, 0.1f)},
@@ -251,6 +251,8 @@ int main() {
  float lacrunarity = 2.0f;
  int scale = 2; 
  float yOffset = 0.0f;
+ float xOffset = 0.0f;
+ float zOffset = 0.0f;
  int height = 1;
 
 
@@ -305,6 +307,8 @@ int main() {
   ImGui::SliderFloat("Lacrunarity", &lacrunarity, 0.5f, 5.0f);
   ImGui::SliderInt("Scale", &scale, 1, 10);
   ImGui::SliderFloat("yOffset", &yOffset, -2.0f, 2.0f);
+  ImGui::SliderFloat("xOffset", &xOffset, -20.0f, 20.0f);
+  ImGui::SliderFloat("zOffset", &zOffset, -20.0f, 20.0f);
   ImGui::SliderInt("height", &height, 1, 50);
   ImGui::End();
     
@@ -313,6 +317,8 @@ int main() {
   ourShader.setFloat("lacunarity", lacrunarity);
   ourShader.setInt("scale", scale);
   ourShader.setFloat("yOffset", yOffset);
+  ourShader.setFloat("xOffset", xOffset);
+  ourShader.setFloat("zOffset", zOffset);
   ourShader.setInt("height", height);
 
   ImGui::Render();
