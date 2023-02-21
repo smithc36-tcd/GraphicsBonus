@@ -231,6 +231,10 @@ int main() {
   pyramidModel = glm::translate(pyramidModel, pyramidPos);
 
   lightShader.use();
+  //lightShader.
+
+
+
   glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE,
                      glm::value_ptr(lightModel));
   glUniform4f(glGetUniformLocation(lightShader.ID, "lightColor"), lightColor.x,
@@ -294,8 +298,9 @@ int main() {
     camera.Inputs(window);
     camera.updateMatrix(45.0f, 0.1f, 100.0f);
 
-    floor.Draw(ourShader, camera);
-    light.Draw(lightShader, camera);
+    floor
+uniform float yOffset;
+
 
     // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved
     // etc.)
