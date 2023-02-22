@@ -19,12 +19,12 @@ vec4 PointLight()
     float inten = 1.0f / (a * dist * dist + b * dist + 1.0f);
     
     // To simulate light bouncing
-    float ambient = 0.2f;
+    float ambient = 0.1f;
 
     vec3 normal = normalize(Normal);
     vec3 lightDirection = normalize(lightVec);
 
-    float diffuse= max(dot(normal, lightDirection), 0.0f);
+    float diffuse = max(dot(normal, lightDirection), 0.0f);
     
     float specularLight = 0.5f;
     vec3 viewDirection = normalize(camPos - currPos);
@@ -32,8 +32,10 @@ vec4 PointLight()
     float specAmount = pow(max(dot(viewDirection, reflectionDirection), 0.0f), 8);
     float specular = specAmount * specularLight;
 
-    return lightColor * (diffuse * inten + ambient) + 
-         specular * inten * lightColor;
+    return lightColor * (diffuse + ambient) + 
+         specular * lightColor;
+    //return lightColor * (diffuse * inten + ambient) + 
+         //specular * inten * lightColor;
 }
 
 vec4 DirectionalLight()
@@ -107,10 +109,10 @@ vec4 ColorHeight(float y)
 
 void main()
 {
-    //FragColor = PointLight();
+    FragColor = PointLight() + Color;
     //FragColor = DirectionalLight() + Color;
     //FragColor = SpotLight();
 
-    FragColor = Color;
+    //FragColor = Color;
 
 }

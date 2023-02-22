@@ -23,9 +23,11 @@ class VBO
         unsigned int ID;
         VBO(std::vector<Vertex>& vertices);
 
+
         void Bind();
         void Unbind();
         void Delete();
+        void SubData(std::vector<Vertex> &newVertices);
 
 };
 

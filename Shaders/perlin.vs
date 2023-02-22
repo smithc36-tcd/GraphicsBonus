@@ -10,6 +10,7 @@ out vec4 Color;
 // uniforms needed for 3d viewing 
 uniform mat4 camMatrix;
 uniform mat4 model;
+uniform float time;
 
 // Perlin
 uniform float persistence; 
@@ -98,12 +99,18 @@ vec4 ColorHeight(float y)
 void main()
 {
     // Current position used to calcuate the direction of light 
-    currPos = vec3(model * vec4(aPos, 1.0f));
-    float noise = FBM((currPos.x + xOffset)* 0.2, (currPos.z + zOffset) * 0.2);
-    currPos.y = currPos.y + noise * height +  yOffset;
-    //currPos.y = Perlin(currPos.x, currPos.z);
+    currPos = vec3(vec4(aPos, 1.0f));
+    currPos.y = currPos.y + 0.1 * sin(time * currPos.y);
     Normal = aNormal;
-    Color = ColorHeight(2* noise);
+    Color = vec4(aColor, 1.0);
 
     gl_Position = camMatrix * vec4(currPos, 1.0f);
 }
+    // Current position used to calcuate the direction of light 
+    //currPos = vec3(model * vec4(aPos, 1.0f));
+    //currPos = vec3(vec4(aPos, 1.0f));
+    //Normal = aNormal;
+    //Color = vec4(aColor, 1.0);
+
+    //gl_Position = camMatrix * vec4(currPos, 1.0f);
+

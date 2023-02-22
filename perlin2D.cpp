@@ -55,5 +55,5 @@ float Perlin2D::perlin(float x, float y) {
     ix1 = interpolate(n0, n1, sx);
 
     value = interpolate(ix0, ix1, sy);
-    return (value * 0.5) + 0.5; // Will return in range -1 to 1. To make it in range 0 to 1, multiply by 0.5 and add 0.5
+    return (value); // Will return in range -1 to 1. To make it in range 0 to 1, multiply by 0.5 and add 0.5
 }

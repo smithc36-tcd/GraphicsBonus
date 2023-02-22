@@ -2,7 +2,8 @@
 #include <glm/ext/quaternion_geometric.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <iostream>
-#include <system_error>
+#include <vector>
+
 #define STB_IMAGE_IMPLEMENTATION
 // #include "stb_image.h"
 #include "Mesh.hpp"
@@ -57,47 +58,79 @@ std::vector<GLuint> gen_indices(int div) {
   }
   return indices;
 }
+
+float MapWidth = 50.0f;
+
 Perlin2D noise;
+float persistence = 0.5f;
+float lacrunarity = 2.0f;
+int scale = 2;
+int octaves = 3;
+float yOffset = 0.0f;
+float xOffset = 0.0f;
+float zOffset = 0.0f;
+int height = 1;
 
-float FBM(float x, float y, float scale, float persistence, float lacrunarity, int octaves)
-{
-    const float xs = x / scale;
-    const float ys = y / scale;
-    float amp = 1.0f, freq = 1.0f, total = 0.0f, normalisation = 0.0f;
+float Prev_persistence = persistence;
+float Prev_lacrunarity = lacrunarity;
+int Prev_scale = scale;
+int Prev_octaves = octaves;
+float Prev_yOffset = yOffset;
+float Prev_xOffset = xOffset;
+float Prev_zOffset = zOffset;
+int Prev_height = height;
 
-    for(int i = 0; i < octaves; i++)
-    {
-        float noiseVal = noise.perlin(xs * freq, ys * freq);
-        total += noiseVal * amp;
-        normalisation += amp;
-        amp *= persistence;
-        freq *= lacrunarity;
-    }
+bool CheckGUIstates() {
+  if (Prev_persistence != persistence || Prev_lacrunarity != lacrunarity ||
+      Prev_scale != scale || Prev_octaves != octaves ||
+      Prev_yOffset != yOffset || Prev_xOffset != xOffset ||
+      Prev_zOffset != zOffset || Prev_height != height) {
 
-    total /= normalisation;
+    Prev_persistence = persistence;
+    Prev_lacrunarity = lacrunarity;
+    Prev_scale = scale;
+    Prev_octaves = octaves;
+    Prev_yOffset = yOffset;
+    Prev_xOffset = xOffset;
+    Prev_zOffset = zOffset;
+    Prev_height = height;
+    return true;
+  } else {
+    return false;
+  }
+}
 
-    return total;
+float FBM(float x, float y, float scale, float persistence, float lacrunarity,
+          int octaves) {
+  const float xs = (x - MapWidth/2) / scale;
+  const float ys = (y - MapWidth/2) / scale;
+  float amp = 1.0f, freq = 1.0f, total = 0.0f, normalisation = 0.0f;
+
+  for (int i = 0; i < octaves; i++) {
+    float noiseVal = noise.perlin(xs * freq, ys * freq);
+    total += noiseVal * amp;
+    normalisation += amp;
+    amp *= persistence;
+    freq *= lacrunarity;
+  }
+
+  total /= normalisation;
+
+  return total;
 }
 
 std::vector<glm::vec3> gen_coords(int dVertices, float width) {
-  //std::vector<float> noiseMap = noise.generate_noise_map();
-  //std::cout << noiseMap.size() << std::endl;
   std::vector<glm::vec3> coords;
   coords.reserve(dVertices * dVertices);
-  // coords normals colours
-  // gen coords,
-  // gen Normals,
-  // gen colours
 
   float triangle_length = width / dVertices;
   for (int col = 0; col < dVertices; col++) {
     for (int row = 0; row < dVertices; row++) {
-      //float noise = noiseMap[row + col * dVertices];
-      //std::cout << noise << std::endl;
       float x = row * triangle_length;
       float z = col * triangle_length;
-      //float y = FBM(x, z, 5, 0.5, 2, 4);
-      coords.push_back(glm::vec3(x, 0.0, z));
+      float noise = FBM(x + xOffset, z + zOffset, scale, persistence, lacrunarity, octaves);
+      float y = (noise) * height;
+      coords.push_back(glm::vec3(x, y, z));
     }
   }
   return coords;
@@ -105,43 +138,78 @@ std::vector<glm::vec3> gen_coords(int dVertices, float width) {
 
 std::vector<glm::vec3> gen_normals(std::vector<glm::vec3> coords,
                                    std::vector<GLuint> indices) {
+  // std::cout << "Beginning of gen normals" << std::endl;
   std::vector<glm::vec3> normals;
-  // normal.reserve()
-  for (int i = 0; i < indices.size(); i += 3) {
-    glm::vec3 U = coords[i + 1] - coords[i];
-    glm::vec3 V = coords[i + 2] - coords[i];
-    glm::vec3 normal = glm::normalize(glm::cross(U, V));
-    normals.push_back(normal);
+  normals.reserve(coords.size());
+  for (int i = 0; i < coords.size(); i++) {
+    normals.push_back(glm::vec3(0.0f, 0.0f, 0.0f));
   }
+  // std::vector<glm::vec3> normals(coords.size(), glm::vec3(0.0f, 0.0f, 0.0f));
+  // std::cout << "Beginning of gen normals" << std::endl;
+  //  normal.reserve()
+  for (int i = 0; i < indices.size(); i += 3) {
+    // std::cout << i << std::endl;
+    glm::vec3 U = coords[indices[i + 1]] - coords[indices[i]];
+    glm::vec3 V = coords[indices[i + 2]] - coords[indices[i]];
+    glm::vec3 normal = glm::cross(U, V);
+    normals[indices[i]] += normal;
+    normals[indices[i + 1]] += normal;
+    normals[indices[i + 2]] += normal;
+    // std::cout << i << std::endl;
+  }
+  // std::cout << normals.size() << std::endl;
   return normals;
 }
 
-// std::vector<glm::vec3> gen_colors()
-//{
-
-//}
-
-std::vector<Vertex> gen_vertex()
+std::vector<Vertex> gen_vertex(std::vector<GLuint> indices)
 // void gen_vertex()
 {
   std::vector<Vertex> Vertices;
-  std::vector<GLuint> indices = gen_indices(500);
-  std::vector<glm::vec3> coords = gen_coords(500, 50.0f);
-  //    std::vector<glm::vec3> normals = gen_normals(coords, indices);
+  std::vector<glm::vec3> coords = gen_coords(100, MapWidth);
+  std::cout << "Coords generated" << std::endl;
+  std::vector<glm::vec3> normals = gen_normals(coords, indices);
+  std::cout << "Normals Generated" << std::endl;
+
   for (int i = 0; i < coords.size(); i++) {
-    Vertices.push_back(
-        Vertex{coords[i], glm::vec3(0.0f, 1.0f, 0.0f),
-               glm::vec3(coords[i].y, coords[i].y, coords[i].y)});
+    Vertices.push_back(Vertex{coords[i], normals[i], glm::vec3(.5, .5, .5)});
   }
   return Vertices;
 }
 
+std::vector<glm::vec3> gen_water(int dVertices, float width) {
+  std::vector<glm::vec3> coords;
+  coords.reserve(dVertices * dVertices);
+
+  float triangle_length = width / dVertices;
+  for (int col = 0; col < dVertices; col++) {
+    for (int row = 0; row < dVertices; row++) {
+      float x = row * triangle_length;
+      float z = col * triangle_length;
+      float noise = FBM(x, z, 3, 1, 5, 2);
+      float y = (noise) + 1;
+      coords.push_back(glm::vec3(x, y, z));
+    }
+  }
+  return coords;
+}
+std::vector<Vertex> gen_water_vertex(std::vector<GLuint> indices)
+// void gen_vertex()
+{
+  std::vector<Vertex> Vertices;
+  std::vector<glm::vec3> watercoords = gen_water(100, MapWidth);
+  std::cout << "Coords generated" << std::endl;
+  std::vector<glm::vec3> normals = gen_normals(watercoords, indices);
+  std::cout << "Normals Generated" << std::endl;
+
+  for (int i = 0; i < watercoords.size(); i++) {
+    Vertices.push_back(Vertex{watercoords[i], normals[i], glm::vec3(21.0f/255.0f, 49.0f/255.0f, 126.0f/255.0f)});
+  }
+  return Vertices;
+}
+
+
 int main() {
 
-  // if (init() != 0) {
-  // std::cerr << "INIT FAILED" << std::endl;
-  // return -1;
-  //}
   glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -176,24 +244,19 @@ int main() {
   ImGui_ImplGlfw_InitForOpenGL(window, true);
   ImGui_ImplOpenGL3_Init("#version 330");
 
-
   // build and compile our shader zprogram
   // ------------------------------------
-  Shader ourShader("Shaders/perlin.vs", "Shaders/shader.fs");
+  Shader ourShader("Shaders/shader.vs", "Shaders/shader.fs");
 
   // set up vertex data (and buffer(s)) and configure vertex attributes
   // ------------------------------------------------------------------
 
-  // Gernerate Vertices
-  // Generate Indices
-  // TexCoords
-  // Generate Normals
-  //
-  //
-  // Vertex structure (coords, normals, color);
-  //
-  std::vector<Vertex> Vertices = gen_vertex();
-  std::vector<GLuint> Indices = gen_indices(500);
+  std::vector<GLuint> Indices = gen_indices(100);
+  std::cout << Indices.size() << std::endl;
+  // for(GLuint x : Indices){
+  // std::cout << x << ", ";
+  //}
+  std::vector<Vertex> Vertices = gen_vertex(Indices);
 
   Vertex lightVertices[] = {//     COORDINATES     //
                             Vertex{glm::vec3(-0.1f, -0.1f, 0.1f)},
@@ -211,18 +274,24 @@ int main() {
 
   Mesh floor(Vertices, Indices);
 
+
+  Shader waterShader("Shaders/perlin.vs", "Shaders/shader.fs");
+  std::vector<Vertex> waterV = gen_water_vertex(Indices);
+  Mesh water( waterV ,Indices);
+
   // Lighting
 
   Shader lightShader("Shaders/light.vs", "Shaders/light.fs");
+  
   std::vector<Vertex> lightVerts(
       lightVertices, lightVertices + sizeof(lightVertices) / sizeof(Vertex));
   std::vector<GLuint> lightInd(
       lightIndices, lightIndices + sizeof(lightIndices) / sizeof(GLuint));
   Mesh light(lightVerts, lightInd);
 
-  glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+  glm::vec4 lightColor = glm::vec4(255.0/255.0, 171.0f/255.0f, 55.0f/255.0f, 1.0f);
 
-  glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 0.5f);
+  glm::vec3 lightPos = glm::vec3(60.0f, 100.0f, 60.0f);
   glm::mat4 lightModel = glm::mat4(1.0f);
   lightModel = glm::translate(lightModel, lightPos);
 
@@ -231,9 +300,7 @@ int main() {
   pyramidModel = glm::translate(pyramidModel, pyramidPos);
 
   lightShader.use();
-  //lightShader.
-
-
+  // lightShader.
 
   glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE,
                      glm::value_ptr(lightModel));
@@ -244,30 +311,16 @@ int main() {
                      glm::value_ptr(pyramidModel));
   glUniform4f(glGetUniformLocation(ourShader.ID, "lightColor"), lightColor.x,
               lightColor.y, lightColor.z, lightColor.w);
-  glUniform3f(glGetUniformLocation(ourShader.ID, "lightPos"), lightColor.x,
-              lightColor.y, lightColor.z);
-  //glUniform1f(glGetUniformLocation(ourShader.ID, "persistence"))
+  glUniform3f(glGetUniformLocation(ourShader.ID, "lightPos"), lightPos.x,
+              lightPos.y, lightPos.z);
+  // glUniform1f(glGetUniformLocation(ourShader.ID, "persistence"))
   //
   //
-  
 
- float persistence = 0.5f;
- float lacrunarity = 2.0f;
- int scale = 2; 
- float yOffset = 0.0f;
- float xOffset = 0.0f;
- float zOffset = 0.0f;
- int height = 1;
-
-
-
-
- //V     uniform float persistence; 
-//unitform float lacunarity;
-//uniform int scale; 
-//Vuniform int octaves; 
-
-
+  // V     uniform float persistence;
+  // unitform float lacunarity;
+  // uniform int scale;
+  // Vuniform int octaves;
 
   // load and create a texture
   // -------------------------
@@ -275,8 +328,6 @@ int main() {
   glEnable(GL_DEPTH_TEST);
 
   Camera camera(SCR_WIDTH, SCR_HEIGHT, glm::vec3(0.0f, 1.0f, 2.0f));
-
-
 
   // render loop
   // -----------
@@ -289,7 +340,6 @@ int main() {
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-
     // render
     // ------
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -298,37 +348,48 @@ int main() {
     camera.Inputs(window);
     camera.updateMatrix(45.0f, 0.1f, 100.0f);
 
-    floor
-uniform float yOffset;
+    if (CheckGUIstates()) {
+      std::vector<Vertex> newVertices = gen_vertex(Indices);
+      std::vector<Vertex> waterV = gen_water_vertex(Indices);
+      floor.Redraw(newVertices);
+      water.Redraw(waterV);
+    }
+    ourShader.use();
+    floor.Draw(ourShader, camera);
+    light.Draw(lightShader, camera);
 
+    waterShader.use();
+    float time = glfwGetTime();
+    float val = sin(time);
+    waterShader.setFloat("time", time);
+    water.Draw(waterShader, camera);
 
     // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved
     // etc.)
     // -------------------------------------------------------------------------------
-    
-  ImGui::Begin("ImGui Window");
-  ImGui::Text("Hello, World");
-  ImGui::SliderFloat("Persistence", &persistence, 0.1f, 1.0f);
-  ImGui::SliderFloat("Lacrunarity", &lacrunarity, 0.5f, 5.0f);
-  ImGui::SliderInt("Scale", &scale, 1, 10);
-  ImGui::SliderFloat("yOffset", &yOffset, -2.0f, 2.0f);
-  ImGui::SliderFloat("xOffset", &xOffset, -20.0f, 20.0f);
-  ImGui::SliderFloat("zOffset", &zOffset, -20.0f, 20.0f);
-  ImGui::SliderInt("height", &height, 1, 50);
-  ImGui::End();
-    
-  ourShader.use();
-  ourShader.setFloat("persistence", persistence);
-  ourShader.setFloat("lacunarity", lacrunarity);
-  ourShader.setInt("scale", scale);
-  ourShader.setFloat("yOffset", yOffset);
-  ourShader.setFloat("xOffset", xOffset);
-  ourShader.setFloat("zOffset", zOffset);
-  ourShader.setInt("height", height);
 
-  ImGui::Render();
-  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    ImGui::Begin("ImGui Window");
+    ImGui::Text("Hello, World");
+    ImGui::SliderFloat("Persistence", &persistence, 0.1f, 1.0f);
+    ImGui::SliderFloat("Lacrunarity", &lacrunarity, 0.5f, 5.0f);
+    ImGui::SliderInt("Scale", &scale, 1, 15);
+    ImGui::SliderInt("Octaves", &octaves, 1, 8);
+    ImGui::SliderFloat("yOffset", &yOffset, -2.0f, 2.0f);
+    ImGui::SliderFloat("xOffset", &xOffset, -20.0f, 20.0f);
+    ImGui::SliderFloat("zOffset", &zOffset, -20.0f, 20.0f);
+    ImGui::SliderInt("height", &height, 1, 50);
+    ImGui::End();
 
+    // ourShader.setFloat("persistence", persistence);
+    // ourShader.setFloat("lacunarity", lacrunarity);
+    // ourShader.setInt("scale", scale);
+    // ourShader.setFloat("yOffset", yOffset);
+    // ourShader.setFloat("xOffset", xOffset);
+    // ourShader.setFloat("zOffset", zOffset);
+    // ourShader.setInt("height", height);
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     glfwSwapBuffers(window);
     glfwPollEvents();
@@ -341,9 +402,9 @@ uniform float yOffset;
   // glDeleteVertexArrays(1, &VAO);
   // glDeleteBuffers(1, &VBO);
   // glDeleteBuffers(1, &EBO);
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
+  ImGui_ImplOpenGL3_NewFrame();
+  ImGui_ImplGlfw_NewFrame();
+  ImGui::NewFrame();
 
   // glfw: terminate, clearing all previously allocated GLFW resources.
   // ------------------------------------------------------------------

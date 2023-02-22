@@ -14,7 +14,8 @@ uniform mat4 model;
 void main()
 {
     // Current position used to calcuate the direction of light 
-    currPos = vec3(model * vec4(aPos, 1.0f));
+    //currPos = vec3(model * vec4(aPos, 1.0f));
+    currPos = vec3(vec4(aPos, 1.0f));
     Normal = aNormal;
     Color = vec4(aColor, 1.0);
 
