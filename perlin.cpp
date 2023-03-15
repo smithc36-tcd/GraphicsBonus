@@ -6,7 +6,7 @@ std::vector<float> Perlin::generate_noise_map() {
     
   std::vector<float> NormalisedNoiseValues((chunkHeight * chunkWidth), 1.0);
 
-  float amp = 1.0, freq = 1.0, maxHeight = 0.0;
+  float amp = 2.0, freq = 0.05, maxHeight = 0.0;
 
   for (int i = 0; i < octaves; i++) {
     maxHeight += amp;

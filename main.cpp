@@ -1,4 +1,5 @@
 #include "perlin2D.hpp"
+#include <glm/detail/qualifier.hpp>
 #include <glm/ext/quaternion_geometric.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <iostream>
@@ -19,6 +20,15 @@ void processInput(GLFWwindow *window);
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
+
+//colours 
+glm::vec3 SEA_BLUE =            glm::vec3(0.0/255.0,    33.0/255.0,     115.0/255.0);
+glm::vec3 SAND =                glm::vec3(194.0/255.0,  178.0/255.0,    128.0/255.0);
+glm::vec3 GRASSLAND =           glm::vec3(128.0/255.0,  177.0/255.0,     69.0/255.0);
+glm::vec3 UPPER_GRASSLAND =     glm::vec3(89.0/255.0,   149.0/255.0,    74.0/255.0);
+glm::vec3 LOWER_MOUNTAIN =      glm::vec3(105.0/255.0,  105.0/255.0,    105.0/255.0);
+glm::vec3 UPPER_MOUNTAIN =      glm::vec3(122.0/255.0,  122.0/255.0,    122.0/255.0);
+glm::vec3 SNOW =                glm::vec3(1,1,1);
 
 // Initialisation function
 int init() {
@@ -59,17 +69,19 @@ std::vector<GLuint> gen_indices(int div) {
   return indices;
 }
 
-float MapWidth = 50.0f;
+const float MapWidth = 30.0f;
+const float SEA_LEVEL = 1.0;
 
 Perlin2D noise;
 float persistence = 0.5f;
 float lacrunarity = 2.0f;
-int scale = 2;
+int scale = 5;
 int octaves = 3;
 float yOffset = 0.0f;
 float xOffset = 0.0f;
 float zOffset = 0.0f;
 int height = 1;
+int seed = 0;
 
 float Prev_persistence = persistence;
 float Prev_lacrunarity = lacrunarity;
@@ -79,12 +91,13 @@ float Prev_yOffset = yOffset;
 float Prev_xOffset = xOffset;
 float Prev_zOffset = zOffset;
 int Prev_height = height;
+int Prev_seed = seed;
 
 bool CheckGUIstates() {
   if (Prev_persistence != persistence || Prev_lacrunarity != lacrunarity ||
       Prev_scale != scale || Prev_octaves != octaves ||
       Prev_yOffset != yOffset || Prev_xOffset != xOffset ||
-      Prev_zOffset != zOffset || Prev_height != height) {
+      Prev_zOffset != zOffset || Prev_height != height || Prev_seed !=seed) {
 
     Prev_persistence = persistence;
     Prev_lacrunarity = lacrunarity;
@@ -94,6 +107,7 @@ bool CheckGUIstates() {
     Prev_xOffset = xOffset;
     Prev_zOffset = zOffset;
     Prev_height = height;
+    Prev_seed = seed;
     return true;
   } else {
     return false;
@@ -121,6 +135,8 @@ float FBM(float x, float y, float scale, float persistence, float lacrunarity,
 
 std::vector<glm::vec3> gen_coords(int dVertices, float width) {
   std::vector<glm::vec3> coords;
+  srand(abs(seed));
+  int random = rand() % 200;
   coords.reserve(dVertices * dVertices);
 
   float triangle_length = width / dVertices;
@@ -128,8 +144,8 @@ std::vector<glm::vec3> gen_coords(int dVertices, float width) {
     for (int row = 0; row < dVertices; row++) {
       float x = row * triangle_length;
       float z = col * triangle_length;
-      float noise = FBM(x + xOffset, z + zOffset, scale, persistence, lacrunarity, octaves);
-      float y = (noise) * height;
+      float noise = FBM(x + xOffset + random, z + zOffset + random, scale, persistence, lacrunarity, octaves);
+      float y = fmax(0.0, (noise) * height);
       coords.push_back(glm::vec3(x, y, z));
     }
   }
@@ -161,17 +177,42 @@ std::vector<glm::vec3> gen_normals(std::vector<glm::vec3> coords,
   return normals;
 }
 
+std::vector<glm::vec3> gen_colors(const std::vector<glm::vec3> &coords)
+{
+    std::vector<glm::vec3> colors; 
+    colors.reserve(coords.size());
+   for(glm::vec3 coord : coords)
+   {
+        if(coord.y < 0.6) 
+               colors.push_back(SEA_BLUE);
+        else if(coord.y < 2.0)
+               colors.push_back(SAND);
+        else if(coord.y < 4.0)
+               colors.push_back(GRASSLAND);
+        else if(coord.y < 6.0)
+               colors.push_back(UPPER_GRASSLAND);
+        else if(coord.y < 10)
+               colors.push_back(LOWER_MOUNTAIN);
+        else if(coord.y < 20)
+               colors.push_back(UPPER_MOUNTAIN);
+        else
+               colors.push_back(SNOW);
+    }
+   return colors; 
+}
+
 std::vector<Vertex> gen_vertex(std::vector<GLuint> indices)
 // void gen_vertex()
 {
   std::vector<Vertex> Vertices;
-  std::vector<glm::vec3> coords = gen_coords(100, MapWidth);
-  std::cout << "Coords generated" << std::endl;
+  std::vector<glm::vec3> coords = gen_coords(200, MapWidth);
   std::vector<glm::vec3> normals = gen_normals(coords, indices);
-  std::cout << "Normals Generated" << std::endl;
+  std::vector<glm::vec3> colors = gen_colors(coords);
+
+
 
   for (int i = 0; i < coords.size(); i++) {
-    Vertices.push_back(Vertex{coords[i], normals[i], glm::vec3(.5, .5, .5)});
+    Vertices.push_back(Vertex{coords[i], normals[i], colors[i]});
   }
   return Vertices;
 }
@@ -186,7 +227,7 @@ std::vector<glm::vec3> gen_water(int dVertices, float width) {
       float x = row * triangle_length;
       float z = col * triangle_length;
       float noise = FBM(x, z, 3, 1, 5, 2);
-      float y = (noise) + 1;
+      float y = (noise) + SEA_LEVEL;
       coords.push_back(glm::vec3(x, y, z));
     }
   }
@@ -196,10 +237,10 @@ std::vector<Vertex> gen_water_vertex(std::vector<GLuint> indices)
 // void gen_vertex()
 {
   std::vector<Vertex> Vertices;
-  std::vector<glm::vec3> watercoords = gen_water(100, MapWidth);
-  std::cout << "Coords generated" << std::endl;
+  std::vector<glm::vec3> watercoords = gen_water(200, MapWidth);
+  //std::cout << "Coords generated" << std::endl;
   std::vector<glm::vec3> normals = gen_normals(watercoords, indices);
-  std::cout << "Normals Generated" << std::endl;
+  //std::cout << "Normals Generated" << std::endl;
 
   for (int i = 0; i < watercoords.size(); i++) {
     Vertices.push_back(Vertex{watercoords[i], normals[i], glm::vec3(21.0f/255.0f, 49.0f/255.0f, 126.0f/255.0f)});
@@ -251,7 +292,7 @@ int main() {
   // set up vertex data (and buffer(s)) and configure vertex attributes
   // ------------------------------------------------------------------
 
-  std::vector<GLuint> Indices = gen_indices(100);
+  std::vector<GLuint> Indices = gen_indices(200);
   std::cout << Indices.size() << std::endl;
   // for(GLuint x : Indices){
   // std::cout << x << ", ";
@@ -372,21 +413,14 @@ int main() {
     ImGui::Text("Hello, World");
     ImGui::SliderFloat("Persistence", &persistence, 0.1f, 1.0f);
     ImGui::SliderFloat("Lacrunarity", &lacrunarity, 0.5f, 5.0f);
-    ImGui::SliderInt("Scale", &scale, 1, 15);
+    ImGui::SliderInt("Scale", &scale, 1, 25);
     ImGui::SliderInt("Octaves", &octaves, 1, 8);
     ImGui::SliderFloat("yOffset", &yOffset, -2.0f, 2.0f);
     ImGui::SliderFloat("xOffset", &xOffset, -20.0f, 20.0f);
     ImGui::SliderFloat("zOffset", &zOffset, -20.0f, 20.0f);
     ImGui::SliderInt("height", &height, 1, 50);
+    ImGui::InputInt("Seed", &seed);
     ImGui::End();
-
-    // ourShader.setFloat("persistence", persistence);
-    // ourShader.setFloat("lacunarity", lacrunarity);
-    // ourShader.setInt("scale", scale);
-    // ourShader.setFloat("yOffset", yOffset);
-    // ourShader.setFloat("xOffset", xOffset);
-    // ourShader.setFloat("zOffset", zOffset);
-    // ourShader.setInt("height", height);
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
