@@ -6,13 +6,13 @@
 #include <vector>
 
 #define STB_IMAGE_IMPLEMENTATION
-// #include "stb_image.h"
+// #include "include/stb_image.h"
 #include "Mesh.hpp"
 #include "perlin.hpp"
 
-#include "imGUI/imgui.h"
-#include "imGUI/imgui_impl_glfw.h"
-#include "imGUI/imgui_impl_opengl3.h"
+#include "include/imGUI/imgui.h"
+#include "include/imGUI/imgui_impl_glfw.h"
+#include "include/imGUI/imgui_impl_opengl3.h"
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
