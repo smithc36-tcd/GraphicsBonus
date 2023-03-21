@@ -1,18 +1,16 @@
-#include <glm/detail/qualifier.hpp>
-#include <glm/ext/quaternion_geometric.hpp>
-#include <glm/gtx/quaternion.hpp>
+//#include <glm/detail/qualifier.hpp>
+//#include <glm/ext/quaternion_geometric.hpp>
+//#include <glm/gtx/quaternion.hpp>
 #include <iostream>
 #include <vector>
+#include <filesystem>
 
 //define STB_IMAGE_IMPLEMENTATION
 // #include "include/stb_image.h"
 #include "Mesh.hpp"
 #include "perlin.hpp"
 #include "perlin2D.hpp"
-
-#include "../include/imGUI/imgui.h"
-#include "../include/imGUI/imgui_impl_glfw.h"
-#include "../include/imGUI/imgui_impl_opengl3.h"
+#include "gui.hpp"
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -154,26 +152,19 @@ std::vector<glm::vec3> gen_coords(int dVertices, float width) {
 
 std::vector<glm::vec3> gen_normals(std::vector<glm::vec3> coords,
                                    std::vector<GLuint> indices) {
-  // std::cout << "Beginning of gen normals" << std::endl;
   std::vector<glm::vec3> normals;
   normals.reserve(coords.size());
   for (int i = 0; i < coords.size(); i++) {
     normals.push_back(glm::vec3(0.0f, 0.0f, 0.0f));
   }
-  // std::vector<glm::vec3> normals(coords.size(), glm::vec3(0.0f, 0.0f, 0.0f));
-  // std::cout << "Beginning of gen normals" << std::endl;
-  //  normal.reserve()
   for (int i = 0; i < indices.size(); i += 3) {
-    // std::cout << i << std::endl;
     glm::vec3 U = coords[indices[i + 1]] - coords[indices[i]];
     glm::vec3 V = coords[indices[i + 2]] - coords[indices[i]];
     glm::vec3 normal = glm::cross(U, V);
     normals[indices[i]] += normal;
     normals[indices[i + 1]] += normal;
     normals[indices[i + 2]] += normal;
-    // std::cout << i << std::endl;
   }
-  // std::cout << normals.size() << std::endl;
   return normals;
 }
 
@@ -234,13 +225,10 @@ std::vector<glm::vec3> gen_water(int dVertices, float width) {
   return coords;
 }
 std::vector<Vertex> gen_water_vertex(std::vector<GLuint> indices)
-// void gen_vertex()
 {
   std::vector<Vertex> Vertices;
   std::vector<glm::vec3> watercoords = gen_water(200, MapWidth);
-  //std::cout << "Coords generated" << std::endl;
   std::vector<glm::vec3> normals = gen_normals(watercoords, indices);
-  //std::cout << "Normals Generated" << std::endl;
 
   for (int i = 0; i < watercoords.size(); i++) {
     Vertices.push_back(Vertex{watercoords[i], normals[i], glm::vec3(21.0f/255.0f, 49.0f/255.0f, 126.0f/255.0f)});
@@ -277,17 +265,15 @@ int main() {
     return -1;
   }
 
-  IMGUI_CHECKVERSION();
-  ImGui::CreateContext();
-  ImGuiIO &io = ImGui::GetIO();
-  (void)io;
-  ImGui::StyleColorsDark();
-  ImGui_ImplGlfw_InitForOpenGL(window, true);
-  ImGui_ImplOpenGL3_Init("#version 330");
+  // init imGUI
+  GUI myGUI(window);
 
   // build and compile our shader zprogram
   // ------------------------------------
-  Shader ourShader("Shaders/shader.vs", "Shaders/shader.fs");
+  //std::cout << "Current path is " << std::filesystem::current_path() << std::endl; 
+
+
+  Shader ourShader("../src/Shaders/shader.vs", "../src/Shaders/shader.fs");
 
   // set up vertex data (and buffer(s)) and configure vertex attributes
   // ------------------------------------------------------------------
@@ -316,13 +302,13 @@ int main() {
   Mesh floor(Vertices, Indices);
 
 
-  Shader waterShader("Shaders/perlin.vs", "Shaders/shader.fs");
+  Shader waterShader("../src/Shaders/perlin.vs", "../src/Shaders/shader.fs");
   std::vector<Vertex> waterV = gen_water_vertex(Indices);
   Mesh water( waterV ,Indices);
 
   // Lighting
 
-  Shader lightShader("Shaders/light.vs", "Shaders/light.fs");
+  Shader lightShader("../src/Shaders/light.vs", "../src/Shaders/light.fs");
   
   std::vector<Vertex> lightVerts(
       lightVertices, lightVertices + sizeof(lightVertices) / sizeof(Vertex));
@@ -358,11 +344,6 @@ int main() {
   //
   //
 
-  // V     uniform float persistence;
-  // unitform float lacunarity;
-  // uniform int scale;
-  // Vuniform int octaves;
-
   // load and create a texture
   // -------------------------
 
@@ -377,9 +358,7 @@ int main() {
     // -----
     processInput(window);
 
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
+    myGUI.newFrame();
 
     // render
     // ------
@@ -409,21 +388,8 @@ int main() {
     // etc.)
     // -------------------------------------------------------------------------------
 
-    ImGui::Begin("ImGui Window");
-    ImGui::Text("Hello, World");
-    ImGui::SliderFloat("Persistence", &persistence, 0.1f, 1.0f);
-    ImGui::SliderFloat("Lacrunarity", &lacrunarity, 0.5f, 5.0f);
-    ImGui::SliderInt("Scale", &scale, 1, 25);
-    ImGui::SliderInt("Octaves", &octaves, 1, 8);
-    ImGui::SliderFloat("yOffset", &yOffset, -2.0f, 2.0f);
-    ImGui::SliderFloat("xOffset", &xOffset, -20.0f, 20.0f);
-    ImGui::SliderFloat("zOffset", &zOffset, -20.0f, 20.0f);
-    ImGui::SliderInt("height", &height, 1, 50);
-    ImGui::InputInt("Seed", &seed);
-    ImGui::End();
-
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    myGUI.render(persistence, lacrunarity, scale, octaves, xOffset, zOffset, 
+            height);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
@@ -436,9 +402,6 @@ int main() {
   // glDeleteVertexArrays(1, &VAO);
   // glDeleteBuffers(1, &VBO);
   // glDeleteBuffers(1, &EBO);
-  ImGui_ImplOpenGL3_NewFrame();
-  ImGui_ImplGlfw_NewFrame();
-  ImGui::NewFrame();
 
   // glfw: terminate, clearing all previously allocated GLFW resources.
   // ------------------------------------------------------------------
