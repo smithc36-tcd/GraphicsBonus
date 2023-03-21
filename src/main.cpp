@@ -1,18 +1,18 @@
-#include "perlin2D.hpp"
 #include <glm/detail/qualifier.hpp>
 #include <glm/ext/quaternion_geometric.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <iostream>
 #include <vector>
 
-#define STB_IMAGE_IMPLEMENTATION
+//define STB_IMAGE_IMPLEMENTATION
 // #include "include/stb_image.h"
 #include "Mesh.hpp"
 #include "perlin.hpp"
+#include "perlin2D.hpp"
 
-#include "include/imGUI/imgui.h"
-#include "include/imGUI/imgui_impl_glfw.h"
-#include "include/imGUI/imgui_impl_opengl3.h"
+#include "../include/imGUI/imgui.h"
+#include "../include/imGUI/imgui_impl_glfw.h"
+#include "../include/imGUI/imgui_impl_opengl3.h"
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
