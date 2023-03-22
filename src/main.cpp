@@ -1,16 +1,11 @@
-// #include <glm/detail/qualifier.hpp>
-// #include <glm/ext/quaternion_geometric.hpp>
-// #include <glm/gtx/quaternion.hpp>
 #include <filesystem>
 #include <iostream>
 #include <vector>
 
-// define STB_IMAGE_IMPLEMENTATION
-//  #include "include/stb_image.h"
 #include "Mesh.hpp"
 #include "gui.hpp"
-#include "perlin.hpp"
-#include "perlin2D.hpp"
+//#include "perlin.hpp"
+//#include "perlin2D.hpp"
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -20,33 +15,16 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 // colours
-glm::vec3 SEA_BLUE = glm::vec3(0.0 / 255.0, 33.0 / 255.0, 115.0 / 255.0);
-glm::vec3 SAND = glm::vec3(194.0 / 255.0, 178.0 / 255.0, 128.0 / 255.0);
-glm::vec3 GRASSLAND = glm::vec3(128.0 / 255.0, 177.0 / 255.0, 69.0 / 255.0);
-glm::vec3 UPPER_GRASSLAND =
-    glm::vec3(89.0 / 255.0, 149.0 / 255.0, 74.0 / 255.0);
-glm::vec3 LOWER_MOUNTAIN =
-    glm::vec3(105.0 / 255.0, 105.0 / 255.0, 105.0 / 255.0);
-glm::vec3 UPPER_MOUNTAIN =
-    glm::vec3(122.0 / 255.0, 122.0 / 255.0, 122.0 / 255.0);
-glm::vec3 SNOW = glm::vec3(1, 1, 1);
-
-// Initialisation function
-int init() {
-  glfwInit();
-
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-  // glad: load all OpenGL function pointers
-  // ---------------------------------------
-  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-    std::cout << "Failed to initialize GLAD" << std::endl;
-    return -1;
-  }
-  return 0;
-}
+//glm::vec3 SEA_BLUE = glm::vec3(0.0 / 255.0, 33.0 / 255.0, 115.0 / 255.0);
+//glm::vec3 SAND = glm::vec3(194.0 / 255.0, 178.0 / 255.0, 128.0 / 255.0);
+//glm::vec3 GRASSLAND = glm::vec3(128.0 / 255.0, 177.0 / 255.0, 69.0 / 255.0);
+//glm::vec3 UPPER_GRASSLAND =
+    //glm::vec3(89.0 / 255.0, 149.0 / 255.0, 74.0 / 255.0);
+//glm::vec3 LOWER_MOUNTAIN =
+    //glm::vec3(105.0 / 255.0, 105.0 / 255.0, 105.0 / 255.0);
+//glm::vec3 UPPER_MOUNTAIN =
+    //glm::vec3(122.0 / 255.0, 122.0 / 255.0, 122.0 / 255.0);
+//glm::vec3 SNOW = glm::vec3(1, 1, 1);
 
 std::vector<GLuint> gen_indices(int div) {
   std::vector<GLuint> indices;
@@ -73,7 +51,7 @@ std::vector<GLuint> gen_indices(int div) {
 const float MapWidth = 30.0f;
 const float SEA_LEVEL = 1.0;
 
-Perlin2D noise;
+//Perlin2D noise;
 float persistence = 0.5f;
 float lacrunarity = 2.0f;
 int scale = 5;
@@ -83,56 +61,6 @@ float xOffset = 0.0f;
 float zOffset = 0.0f;
 int height = 1;
 int seed = 0;
-
-float Prev_persistence = persistence;
-float Prev_lacrunarity = lacrunarity;
-int Prev_scale = scale;
-int Prev_octaves = octaves;
-float Prev_yOffset = yOffset;
-float Prev_xOffset = xOffset;
-float Prev_zOffset = zOffset;
-int Prev_height = height;
-int Prev_seed = seed;
-
-bool CheckGUIstates() {
-  if (Prev_persistence != persistence || Prev_lacrunarity != lacrunarity ||
-      Prev_scale != scale || Prev_octaves != octaves ||
-      Prev_yOffset != yOffset || Prev_xOffset != xOffset ||
-      Prev_zOffset != zOffset || Prev_height != height || Prev_seed != seed) {
-
-    Prev_persistence = persistence;
-    Prev_lacrunarity = lacrunarity;
-    Prev_scale = scale;
-    Prev_octaves = octaves;
-    Prev_yOffset = yOffset;
-    Prev_xOffset = xOffset;
-    Prev_zOffset = zOffset;
-    Prev_height = height;
-    Prev_seed = seed;
-    return true;
-  } else {
-    return false;
-  }
-}
-
-float FBM(float x, float y, float scale, float persistence, float lacrunarity,
-          int octaves) {
-  const float xs = (x - MapWidth / 2) / scale;
-  const float ys = (y - MapWidth / 2) / scale;
-  float amp = 1.0f, freq = 1.0f, total = 0.0f, normalisation = 0.0f;
-
-  for (int i = 0; i < octaves; i++) {
-    float noiseVal = noise.perlin(xs * freq, ys * freq);
-    total += noiseVal * amp;
-    normalisation += amp;
-    amp *= persistence;
-    freq *= lacrunarity;
-  }
-
-  total /= normalisation;
-
-  return total;
-}
 
 std::vector<glm::vec3> gen_coords(int dVertices, float width) {
   std::vector<glm::vec3> coords;
@@ -149,88 +77,12 @@ std::vector<glm::vec3> gen_coords(int dVertices, float width) {
   return coords;
 }
 
-std::vector<glm::vec3> gen_normals(std::vector<glm::vec3> coords,
-                                   std::vector<GLuint> indices) {
-  std::vector<glm::vec3> normals;
-  normals.reserve(coords.size());
-  for (int i = 0; i < coords.size(); i++) {
-    normals.push_back(glm::vec3(0.0f, 0.0f, 0.0f));
-  }
-  for (int i = 0; i < indices.size(); i += 3) {
-    glm::vec3 U = coords[indices[i + 1]] - coords[indices[i]];
-    glm::vec3 V = coords[indices[i + 2]] - coords[indices[i]];
-    glm::vec3 normal = glm::cross(U, V);
-    normals[indices[i]] += normal;
-    normals[indices[i + 1]] += normal;
-    normals[indices[i + 2]] += normal;
-  }
-  return normals;
-}
-
-std::vector<glm::vec3> gen_colors(const std::vector<glm::vec3> &coords) {
-  std::vector<glm::vec3> colors;
-  colors.reserve(coords.size());
-  for (glm::vec3 coord : coords) {
-    if (coord.y < 0.6)
-      colors.push_back(SEA_BLUE);
-    else if (coord.y < 2.0)
-      colors.push_back(SAND);
-    else if (coord.y < 4.0)
-      colors.push_back(GRASSLAND);
-    else if (coord.y < 6.0)
-      colors.push_back(UPPER_GRASSLAND);
-    else if (coord.y < 10)
-      colors.push_back(LOWER_MOUNTAIN);
-    else if (coord.y < 20)
-      colors.push_back(UPPER_MOUNTAIN);
-    else
-      colors.push_back(SNOW);
-  }
-  return colors;
-}
-
 std::vector<Vertex> gen_vertex(std::vector<GLuint> indices) {
   std::vector<Vertex> Vertices;
-  std::vector<glm::vec3> coords = gen_coords(200, MapWidth);
-  // std::vector<glm::vec3> normals = gen_normals(coords, indices);
-  // std::vector<glm::vec3> colors = gen_colors(coords);
-
-  // for(int i = 0 ; i < coords.size(); i++)
-  //{
-  // Vertices.push_back(coords[i]);
-  //}
+  std::vector<glm::vec3> coords = gen_coords(500, MapWidth);
 
   for (int i = 0; i < coords.size(); i++) {
     Vertices.push_back(Vertex{coords[i]});
-  }
-  return Vertices;
-}
-
-std::vector<glm::vec3> gen_water(int dVertices, float width) {
-  std::vector<glm::vec3> coords;
-  coords.reserve(dVertices * dVertices);
-
-  float triangle_length = width / dVertices;
-  for (int col = 0; col < dVertices; col++) {
-    for (int row = 0; row < dVertices; row++) {
-      float x = row * triangle_length;
-      float z = col * triangle_length;
-      float noise = FBM(x, z, 3, 1, 5, 2);
-      float y = (noise) + SEA_LEVEL;
-      coords.push_back(glm::vec3(x, y, z));
-    }
-  }
-  return coords;
-}
-std::vector<Vertex> gen_water_vertex(std::vector<GLuint> indices) {
-  std::vector<Vertex> Vertices;
-  std::vector<glm::vec3> watercoords = gen_water(200, MapWidth);
-  std::vector<glm::vec3> normals = gen_normals(watercoords, indices);
-
-  for (int i = 0; i < watercoords.size(); i++) {
-    Vertices.push_back(
-        Vertex{watercoords[i], normals[i],
-               glm::vec3(21.0f / 255.0f, 49.0f / 255.0f, 126.0f / 255.0f)});
   }
   return Vertices;
 }
@@ -268,82 +120,18 @@ int main() {
 
   // build and compile our shader zprogram
   // ------------------------------------
-  // std::cout << "Current path is " << std::filesystem::current_path() <<
-  // std::endl;
 
-  Shader ourShader("../src/Shaders/shader.vs", "../src/Shaders/shader.fs");
+  //Shader ourShader("../src/Shaders/shader.vs", "../src/Shaders/shader.fs");
+  Shader terrainShader("../src/Shaders/terrain.vs", "../src/Shaders/terrain.gs", "../src/Shaders/terrain.fs");
 
   // set up vertex data (and buffer(s)) and configure vertex attributes
   // ------------------------------------------------------------------
 
-  std::vector<GLuint> Indices = gen_indices(200);
-  std::cout << Indices.size() << std::endl;
-  // for(GLuint x : Indices){
-  // std::cout << x << ", ";
-  //}
+  std::vector<GLuint> Indices = gen_indices(500);
   std::vector<Vertex> Vertices = gen_vertex(Indices);
 
-  Vertex lightVertices[] = {//     COORDINATES     //
-                            Vertex{glm::vec3(-0.1f, -0.1f, 0.1f)},
-                            Vertex{glm::vec3(-0.1f, -0.1f, -0.1f)},
-                            Vertex{glm::vec3(0.1f, -0.1f, -0.1f)},
-                            Vertex{glm::vec3(0.1f, -0.1f, 0.1f)},
-                            Vertex{glm::vec3(-0.1f, 0.1f, 0.1f)},
-                            Vertex{glm::vec3(-0.1f, 0.1f, -0.1f)},
-                            Vertex{glm::vec3(0.1f, 0.1f, -0.1f)},
-                            Vertex{glm::vec3(0.1f, 0.1f, 0.1f)}};
-
-  GLuint lightIndices[] = {0, 1, 2, 0, 2, 3, 0, 4, 7, 0, 7, 3,
-                           3, 7, 6, 3, 6, 2, 2, 6, 5, 2, 5, 1,
-                           1, 5, 4, 1, 4, 0, 4, 5, 6, 4, 6, 7};
 
   Mesh floor(Vertices, Indices);
-
-  Shader waterShader("../src/Shaders/perlin.vs", "../src/Shaders/shader.fs");
-  std::vector<Vertex> waterV = gen_water_vertex(Indices);
-  Mesh water(waterV, Indices);
-
-  // Lighting
-
-  Shader lightShader("../src/Shaders/light.vs", "../src/Shaders/light.fs");
-
-  std::vector<Vertex> lightVerts(
-      lightVertices, lightVertices + sizeof(lightVertices) / sizeof(Vertex));
-  std::vector<GLuint> lightInd(
-      lightIndices, lightIndices + sizeof(lightIndices) / sizeof(GLuint));
-  Mesh light(lightVerts, lightInd);
-
-  glm::vec4 lightColor =
-      glm::vec4(255.0 / 255.0, 171.0f / 255.0f, 55.0f / 255.0f, 1.0f);
-
-  glm::vec3 lightPos = glm::vec3(60.0f, 100.0f, 60.0f);
-  glm::mat4 lightModel = glm::mat4(1.0f);
-  lightModel = glm::translate(lightModel, lightPos);
-
-  glm::vec3 pyramidPos = glm::vec3(0.0f, 0.0f, 0.0f);
-  glm::mat4 pyramidModel = glm::mat4(1.0f);
-  pyramidModel = glm::translate(pyramidModel, pyramidPos);
-
-  lightShader.use();
-  // lightShader.
-
-  glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE,
-                     glm::value_ptr(lightModel));
-  glUniform4f(glGetUniformLocation(lightShader.ID, "lightColor"), lightColor.x,
-              lightColor.y, lightColor.z, lightColor.w);
-  ourShader.use();
-  glUniformMatrix4fv(glGetUniformLocation(ourShader.ID, "model"), 1, GL_FALSE,
-                     glm::value_ptr(pyramidModel));
-  glUniform4f(glGetUniformLocation(ourShader.ID, "lightColor"), lightColor.x,
-              lightColor.y, lightColor.z, lightColor.w);
-  glUniform3f(glGetUniformLocation(ourShader.ID, "lightPos"), lightPos.x,
-              lightPos.y, lightPos.z);
-  // glUniform1f(glGetUniformLocation(ourShader.ID, "persistence"))
-  //
-  //
-
-  // load and create a texture
-  // -------------------------
 
   glEnable(GL_DEPTH_TEST);
 
@@ -366,21 +154,8 @@ int main() {
     camera.Inputs(window);
     camera.updateMatrix(45.0f, 0.1f, 100.0f);
 
-    // if (CheckGUIstates()) {
-    // std::vector<Vertex> newVertices = gen_vertex(Indices);
-    // std::vector<Vertex> waterV = gen_water_vertex(Indices);
-    // floor.Redraw(newVertices);
-    // water.Redraw(waterV);
-    //}
-    ourShader.use();
-    floor.Draw(ourShader, camera);
-    light.Draw(lightShader, camera);
-
-    waterShader.use();
-    float time = glfwGetTime();
-    float val = sin(time);
-    waterShader.setFloat("time", time);
-    water.Draw(waterShader, camera);
+    terrainShader.use();
+    floor.Draw(terrainShader, camera);
 
     // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved
     // etc.)
@@ -395,11 +170,7 @@ int main() {
 
   // optional: de-allocate all resources once they've outlived their purpose:
   // ------------------------------------------------------------------------
-  ourShader.Delete();
-  lightShader.Delete();
-  // glDeleteVertexArrays(1, &VAO);
-  // glDeleteBuffers(1, &VBO);
-  // glDeleteBuffers(1, &EBO);
+  terrainShader.Delete();
 
   // glfw: terminate, clearing all previously allocated GLFW resources.
   // ------------------------------------------------------------------

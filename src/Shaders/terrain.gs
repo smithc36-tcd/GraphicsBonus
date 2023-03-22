@@ -17,12 +17,12 @@ const float ambientLighting = 0.3;
 
 vec3 calcNormals(){
     vec3 t1 = gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz;
-    vec3 t2 = gl_in[2]/gl_Position.xyz - gl_in[0].gl_Position.xyz;
+    vec3 t2 = gl_in[2].gl_Position.xyz - gl_in[0].gl_Position.xyz;
     /*vec3 normal = cross(t1, t2);*/
     return normalize(cross(t1, t2));
 }
 
-vec3 specularLight(){
+vec3 specularLight(vec4 worldPosition, vec3 normal){
     vec3 viewVector = normalize(cameraPosition - worldPosition.xyz);
 	vec3 reflectedLightDirection = reflect(lightDirection, normal);
 	float specularFactor = dot(reflectedLightDirection, viewVector);
@@ -33,23 +33,23 @@ vec3 specularLight(){
 
 void main()
 {
-	vec3 normal = calculateTriangleNormal();
+	vec3 normal = calcNormals();
 	float brightness = max(dot(-lightDirection, normal), ambientLighting);
 	vec3 colour = waterColour * brightness;
 
 	vec4 worldPosition = gl_in[0].gl_Position;
 	gl_Position = camMatrix * worldPosition;
-	finalColour = colour + calculateSpecular(worldPosition, normal);
+	finalColour = colour + specularLight(worldPosition, normal);
 	EmitVertex();
 	
 	worldPosition = gl_in[1].gl_Position;
 	gl_Position = camMatrix * worldPosition;
-	finalColour = colour+ calculateSpecular(worldPosition, normal);
+	finalColour = colour+ specularLight(worldPosition, normal);
 	EmitVertex();
 	
 	worldPosition = gl_in[2].gl_Position;
 	gl_Position = camMatrix * worldPosition;
-	finalColour = colour+ calculateSpecular(worldPosition, normal);
+	finalColour = colour+ specularLight(worldPosition, normal);
 	EmitVertex();
 	
 	EndPrimitive();
