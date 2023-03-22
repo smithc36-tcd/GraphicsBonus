@@ -7,3 +7,5 @@ polished in the future
 
 ### Terrain Generation
 Terrain generation using Perlin noise and shaders. 
+
+![Image of perlin noise](Resources/BP.png "Text to show on mouseover")
