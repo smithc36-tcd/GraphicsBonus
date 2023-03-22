@@ -79,5 +79,5 @@ float FBM(float x, float z)
 
 void main()
 {
-    gl_Position = vec4(aPos.x, FBM(aPos.x, aPos.z)*height, aPos.z, 1.0f);
+    gl_Position = vec4(aPos.x, FBM(aPos.x, aPos.z), aPos.z, 1.0f);
 }

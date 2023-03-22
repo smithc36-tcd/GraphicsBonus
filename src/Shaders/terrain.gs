@@ -35,21 +35,21 @@ void main()
 {
 	vec3 normal = calcNormals();
 	float brightness = max(dot(-lightDirection, normal), ambientLighting);
-	vec3 colour = waterColour * brightness;
+	/*vec3 colour = waterColour * brightness;*/
 
 	vec4 worldPosition = gl_in[0].gl_Position;
 	gl_Position = camMatrix * worldPosition;
-	finalColour = colour + specularLight(worldPosition, normal);
+	finalColour = gl_in[0].gl_Position.y + specularLight(worldPosition, normal);
 	EmitVertex();
 	
 	worldPosition = gl_in[1].gl_Position;
 	gl_Position = camMatrix * worldPosition;
-	finalColour = colour+ specularLight(worldPosition, normal);
+	finalColour = gl_in[1].gl_Position.y + specularLight(worldPosition, normal);
 	EmitVertex();
 	
 	worldPosition = gl_in[2].gl_Position;
 	gl_Position = camMatrix * worldPosition;
-	finalColour = colour+ specularLight(worldPosition, normal);
+	finalColour = gl_in[2].gl_Position.y+ specularLight(worldPosition, normal);
 	EmitVertex();
 	
 	EndPrimitive();
