@@ -32,6 +32,7 @@ class Camera
         // Calculate camera matrix 
         void updateMatrix(float FOVdeg, float nearPlane, float farPlane);
         void Matrix(Shader& shader, const char* uniform);
+        glm::mat4 GetViewMatrix(); 
 
 
         void Inputs(GLFWwindow* window);

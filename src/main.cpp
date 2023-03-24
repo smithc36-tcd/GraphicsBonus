@@ -48,12 +48,13 @@ std::vector<GLuint> gen_indices(int div) {
   return indices;
 }
 
-const float MapWidth = 30.0f;
+const float MAP_WIDTH = 100.0f;
+const int NUM_VERTICES = 500;
 const float SEA_LEVEL = 1.0;
 
 //Perlin2D noise;
 float persistence = 0.5f;
-float lacrunarity = 2.0f;
+float lacunarity = 2.0f;
 int scale = 5;
 int octaves = 3;
 float yOffset = 0.0f;
@@ -79,7 +80,7 @@ std::vector<glm::vec3> gen_coords(int dVertices, float width) {
 
 std::vector<Vertex> gen_vertex(std::vector<GLuint> indices) {
   std::vector<Vertex> Vertices;
-  std::vector<glm::vec3> coords = gen_coords(500, MapWidth);
+  std::vector<glm::vec3> coords = gen_coords(NUM_VERTICES, MAP_WIDTH);
 
   for (int i = 0; i < coords.size(); i++) {
     Vertices.push_back(Vertex{coords[i]});
@@ -127,7 +128,7 @@ int main() {
   // set up vertex data (and buffer(s)) and configure vertex attributes
   // ------------------------------------------------------------------
 
-  std::vector<GLuint> Indices = gen_indices(500);
+  std::vector<GLuint> Indices = gen_indices(NUM_VERTICES);
   std::vector<Vertex> Vertices = gen_vertex(Indices);
 
 
@@ -155,13 +156,21 @@ int main() {
     camera.updateMatrix(45.0f, 0.1f, 100.0f);
 
     terrainShader.use();
+    float timeValue = sin(glfwGetTime());
+    terrainShader.setFloat("time", timeValue);
+    terrainShader.setFloat("lacunarity", lacunarity);
+    terrainShader.setFloat("persistence", persistence);
+    terrainShader.setInt("scale", scale);
+
     floor.Draw(terrainShader, camera);
 
     // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved
     // etc.)
     // -------------------------------------------------------------------------------
 
-    myGUI.render(persistence, lacrunarity, scale, octaves, xOffset, zOffset,
+
+    // Render GUI elements
+    myGUI.render(persistence, lacunarity, scale, octaves, xOffset, zOffset,
                  height);
 
     glfwSwapBuffers(window);

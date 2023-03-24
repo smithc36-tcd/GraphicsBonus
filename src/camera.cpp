@@ -28,6 +28,11 @@ void Camera::Matrix(Shader &shader, const char *uniform)
             glm::value_ptr(cameraMatrix));
 }
 
+glm::mat4 Camera::GetViewMatrix()
+    {
+        return glm::lookAt(Position, Position + glm::vec3(0.0f, 0.0f, -1.0f), Up);
+    }
+
 void Camera::Inputs(GLFWwindow* window)
 {
     if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)

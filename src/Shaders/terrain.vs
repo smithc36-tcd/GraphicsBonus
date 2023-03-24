@@ -7,23 +7,25 @@ out vec3 currPos;
 uniform mat4 camMatrix;
 
 // Perlin
-//uniform float persistence; 
-//uniform float lacunarity;
-//uniform int scale; 
+uniform float persistence; 
+uniform float lacunarity;
+uniform int scale; 
 //uniform int octaves; 
 //uniform float yOffset;
 //uniform float xOffset;
 //uniform float zOffset;
 //uniform int height; 
+
+uniform float time;
+
 // Perlin
-float persistence = 0.5; 
-float lacunarity = 4;
-int scale = 5; 
+//float persistence = 0.5; 
+//float lacunarity = 4;
+//int scale = 5; 
 int octaves = 3; 
 float yOffset = 0;
 float xOffset = 0;
-float zOffset = 0;
-int height = 5; 
+float zOffset = 0; 
 
 
 float _lerp(float a0, float a1, float t)
@@ -79,5 +81,5 @@ float FBM(float x, float z)
 
 void main()
 {
-    gl_Position = vec4(aPos.x, FBM(aPos.x, aPos.z), aPos.z, 1.0f);
+    gl_Position = vec4(aPos.x, FBM(aPos.x + time, aPos.z), aPos.z, 1.0f);
 }
