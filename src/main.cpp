@@ -4,8 +4,8 @@
 
 #include "Mesh.hpp"
 #include "gui.hpp"
-//#include "perlin.hpp"
-//#include "perlin2D.hpp"
+// #include "perlin.hpp"
+// #include "perlin2D.hpp"
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -15,16 +15,16 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 // colours
-//glm::vec3 SEA_BLUE = glm::vec3(0.0 / 255.0, 33.0 / 255.0, 115.0 / 255.0);
-//glm::vec3 SAND = glm::vec3(194.0 / 255.0, 178.0 / 255.0, 128.0 / 255.0);
-//glm::vec3 GRASSLAND = glm::vec3(128.0 / 255.0, 177.0 / 255.0, 69.0 / 255.0);
-//glm::vec3 UPPER_GRASSLAND =
-    //glm::vec3(89.0 / 255.0, 149.0 / 255.0, 74.0 / 255.0);
-//glm::vec3 LOWER_MOUNTAIN =
-    //glm::vec3(105.0 / 255.0, 105.0 / 255.0, 105.0 / 255.0);
-//glm::vec3 UPPER_MOUNTAIN =
-    //glm::vec3(122.0 / 255.0, 122.0 / 255.0, 122.0 / 255.0);
-//glm::vec3 SNOW = glm::vec3(1, 1, 1);
+// glm::vec3 SEA_BLUE = glm::vec3(0.0 / 255.0, 33.0 / 255.0, 115.0 / 255.0);
+// glm::vec3 SAND = glm::vec3(194.0 / 255.0, 178.0 / 255.0, 128.0 / 255.0);
+// glm::vec3 GRASSLAND = glm::vec3(128.0 / 255.0, 177.0 / 255.0, 69.0 / 255.0);
+// glm::vec3 UPPER_GRASSLAND =
+// glm::vec3(89.0 / 255.0, 149.0 / 255.0, 74.0 / 255.0);
+// glm::vec3 LOWER_MOUNTAIN =
+// glm::vec3(105.0 / 255.0, 105.0 / 255.0, 105.0 / 255.0);
+// glm::vec3 UPPER_MOUNTAIN =
+// glm::vec3(122.0 / 255.0, 122.0 / 255.0, 122.0 / 255.0);
+// glm::vec3 SNOW = glm::vec3(1, 1, 1);
 
 std::vector<GLuint> gen_indices(int div) {
   std::vector<GLuint> indices;
@@ -52,7 +52,7 @@ const float MAP_WIDTH = 100.0f;
 const int NUM_VERTICES = 500;
 const float SEA_LEVEL = 1.0;
 
-//Perlin2D noise;
+// Perlin2D noise;
 float persistence = 0.5f;
 float lacunarity = 2.0f;
 int scale = 5;
@@ -122,15 +122,15 @@ int main() {
   // build and compile our shader zprogram
   // ------------------------------------
 
-  //Shader ourShader("../src/Shaders/shader.vs", "../src/Shaders/shader.fs");
-  Shader terrainShader("../src/Shaders/terrain.vs", "../src/Shaders/terrain.gs", "../src/Shaders/terrain.fs");
+  // Shader ourShader("../src/Shaders/shader.vs", "../src/Shaders/shader.fs");
+  Shader terrainShader("../src/Shaders/terrain.vs", "../src/Shaders/terrain.gs",
+                       "../src/Shaders/terrain.fs");
 
   // set up vertex data (and buffer(s)) and configure vertex attributes
   // ------------------------------------------------------------------
 
   std::vector<GLuint> Indices = gen_indices(NUM_VERTICES);
   std::vector<Vertex> Vertices = gen_vertex(Indices);
-
 
   Mesh floor(Vertices, Indices);
 
@@ -167,7 +167,6 @@ int main() {
     // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved
     // etc.)
     // -------------------------------------------------------------------------------
-
 
     // Render GUI elements
     myGUI.render(persistence, lacunarity, scale, octaves, xOffset, zOffset,
